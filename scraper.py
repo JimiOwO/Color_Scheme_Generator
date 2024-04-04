@@ -22,8 +22,8 @@ with open("catalog.txt", 'r', encoding='utf-8', errors='ignore') as file:
                 print(url)
                 try:
                     response = requests.get(url)
-                    if response.status_code == 200:
-                        filename = f"images/{title} {author}.jpg"
+                    filename = f"images/{title} {author}.jpg"
+                    if response.status_code == 200 and not os.path.exists(filename):
                         with open(filename, 'wb') as f:
                             f.write(response.content)
                     else:
