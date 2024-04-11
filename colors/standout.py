@@ -141,16 +141,12 @@ def reduce_colors(colors: np.array, n: int = -1):
     uf = UnionFind(len(points))
     ncomp = len(points)
 
-    if n == -1:
-        print("Distances first: ", distances_list[0][0])
     first_dist = - 1
 
     for (dist, i, j) in distances_list:
         if not uf.is_same_set(i, j):
             uf.union(i, j)
             ncomp -= 1
-        if n == -1 and dist != 0:
-            print("Distances: ", dist)
         if n == -1:
             if first_dist == -1 and dist != 0:
                 first_dist = dist
@@ -183,8 +179,6 @@ def get_n_standing_out_color(image_name, n: int = -1):
     colors, counts = np.unique(lab_array, axis=0, return_counts=True)
 
     while (len(colors) > 50):
-        print("Reducing colors")
-        print(len(colors))
         size = len(colors)
         colors = reduce_colors(colors, int(sqrt(size)))
 
