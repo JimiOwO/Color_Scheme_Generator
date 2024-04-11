@@ -1,4 +1,5 @@
 # %%
+from math import sqrt
 import os
 import cv2
 import numpy as np
@@ -10,6 +11,7 @@ import sys
 
 # %%
 quantization_factor = 5
+good_range = 6
 
 # %%
 
@@ -127,7 +129,7 @@ class UnionFind:
         return groups
 
 
-def get_standing_out_color(colors: np.array, n: int = 10):
+def reduce_colors(colors: np.array, n: int = -1):
     points = [color for color in colors]
     distances_list = []
     for i in range(len(points)):
@@ -138,10 +140,20 @@ def get_standing_out_color(colors: np.array, n: int = 10):
     distances_list = sorted(distances_list, key=lambda x: x[0])
     uf = UnionFind(len(points))
     ncomp = len(points)
-    for (_, i, j) in distances_list:
+
+    first_dist = - 1
+
+    for (dist, i, j) in distances_list:
         if not uf.is_same_set(i, j):
             uf.union(i, j)
             ncomp -= 1
+        if n == -1:
+            if first_dist == -1 and dist != 0:
+                first_dist = dist
+            if dist != 0 and dist > first_dist:
+                first_dist = dist
+                if ncomp <= good_range:
+                    break
         if ncomp == n:
             break
 
@@ -157,59 +169,43 @@ def get_standing_out_color(colors: np.array, n: int = 10):
 
 
 # Create Image
-
-
-def create_dominant_image_graph(image_name):
-    # Split with either / or \
-    output_name = image_name.split(
-        "/")[-1].split("\\")[-1].split(".")[0] + ".png"
-    print("output = ", output_name)
+def get_n_standing_out_color(image_name, n: int = -1):
     image = load_image(image_name)
     labs = slice_image(image, 10)
 
     lab_array = np.array(labs)
 
-    # Max l , a, b
-    # max_l = lab_array[:, 0].max()
-    # max_a = lab_array[:, 1].max()
-    # max_b = lab_array[:, 2].max()
-    # min_l = lab_array[:, 0].min()
-    # min_a = lab_array[:, 1].min()
-    # min_b = lab_array[:, 2].min()
-    # print(max_l, max_a, max_b)
-    # print(min_l, min_a, min_b)
-
     # Get the most common color
     colors, counts = np.unique(lab_array, axis=0, return_counts=True)
 
-    # max_l = colors[:, 0].max()
-    # max_a = colors[:, 1].max()
-    # max_b = colors[:, 2].max()
-    # min_l = colors[:, 0].min()
-    # min_a = colors[:, 1].min()
-    # min_b = colors[:, 2].min()
-    # print(max_l, max_a, max_b)
-    # print(min_l, min_a, min_b)
-    # Save to csv
-    # np.savetxt(f"./output/{output_name}.csv", colors, delimiter=",")
+    while (len(colors) > 50):
+        size = len(colors)
+        colors = reduce_colors(colors, int(sqrt(size)))
 
-    print(len(colors))
-    standingout_colors = get_standing_out_color(colors, 10)
+    if n != -1:
+        colors = reduce_colors(colors, n)
+    else:
+        colors = reduce_colors(colors)
+
+    standingout_colors = colors
     standingout_colors_rgb = [cv2.cvtColor(
         np.uint8([[color]]), cv2.COLOR_LAB2RGB)[0][0] for color in standingout_colors]
 
-    print(standingout_colors)
-    print(standingout_colors_rgb)
+    return standingout_colors_rgb
 
+
+def create_dominant_image_graph(standingout_colors, output_name="output.png"):
+
+    len_colors = len(standingout_colors)
     plt.figure(figsize=(15, 5))
-    plt.bar(range(10), [1 for _ in standingout_colors], color=[
-            (c[0] / 255, c[1] / 255, c[2] / 255) for c in standingout_colors_rgb])
-    plt.xticks(range(10), [f"{standingout_colors_rgb[i]}" for i in range(10)])
+    plt.bar(range(len_colors), [1 for _ in standingout_colors], color=[
+            (c[0] / 255, c[1] / 255, c[2] / 255) for c in standingout_colors])
+    plt.xticks(range(len_colors), [
+               f"{standingout_colors[i]}" for i in range(len_colors)])
     plt.xlabel("Color")
     plt.ylabel("Count")
     plt.title("Most common colors")
     plt.savefig(f"./output/standing_{output_name}")
-    # plt.show()
 
 
 if __name__ == "__main__":
@@ -220,4 +216,8 @@ if __name__ == "__main__":
     # Extract argument
     images = sys.argv[1:]
     for image in images:
-        create_dominant_image_graph(image)
+        output_name = image.split(
+            "/")[-1].split("\\")[-1].split(".")[0] + ".png"
+        standingout_colors = get_n_standing_out_color(image)
+        create_dominant_image_graph(
+            standingout_colors, output_name=output_name)
