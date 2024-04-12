@@ -206,6 +206,7 @@ def create_dominant_image_graph(standingout_colors, output_name="output.png"):
     plt.ylabel("Count")
     plt.title("Most common colors")
     plt.savefig(f"./output/standing_{output_name}")
+    plt.show()
 
 
 if __name__ == "__main__":
