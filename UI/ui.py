@@ -9,6 +9,15 @@ def open_image():
     file_path = filedialog.askopenfilename()
     if file_path:
         image = Image.open(file_path)
+        width, height = image.size
+        max_width = 720
+        max_height = 480
+        if width > max_width or height > max_height:
+            ratio = min(max_width / width, max_height / height)
+            new_width = int(width * ratio)
+            new_height = int(height * ratio)
+            image = image.resize((new_width, new_height))
+
         photo_image = ImageTk.PhotoImage(image)
         img_label.configure(image=photo_image)
         img_label.image = photo_image
@@ -16,10 +25,10 @@ def open_image():
         create_dominant_image_graph(color_list)
             
 root = tk.Tk()
-root.title("APP")
-# root.geometry("720x480")
-txt = tk.Label(root,text="please open the image to generate color scheme.",font=("Times New Roman",30))
-open_button = tk.Button(root, text="Open Image", command=open_image,font=("Times New Roman",30))
+root.title("color scheme generator")
+root.geometry("720x480")
+txt = tk.Label(root,text="please open the image to generate color scheme.",font=("Times New Roman",24))
+open_button = tk.Button(root, text="Open Image", command=open_image,font=("Times New Roman",24))
 txt.pack()
 open_button.pack()
 img_label = tk.Label(root)
