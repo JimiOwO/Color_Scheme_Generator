@@ -208,6 +208,8 @@ def create_dominant_image_graph(standingout_colors, output_name="output.png"):
     plt.savefig(f"./output/standing_{output_name}")
     plt.show()
 
+    
+
 
 if __name__ == "__main__":
     # Create output directory if not exists
