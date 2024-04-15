@@ -171,14 +171,17 @@ def reduce_colors(colors: np.array, n: int = -1):
 # Create Image
 def get_n_standing_out_color(image_name, n: int = -1):
     image = load_image(image_name)
-    labs = slice_image(image, 10)
+
+    min_dim = min(image.shape[0], image.shape[1]) // 100
+
+    labs = slice_image(image, min_dim)
 
     lab_array = np.array(labs)
 
     # Get the most common color
     colors, counts = np.unique(lab_array, axis=0, return_counts=True)
 
-    while (len(colors) > 50):
+    while (len(colors) > max(100, n * n)):
         size = len(colors)
         colors = reduce_colors(colors, int(sqrt(size)))
 
@@ -207,8 +210,6 @@ def create_dominant_image_graph(standingout_colors, output_name="output.png"):
     plt.title("Most common colors")
     plt.savefig(f"./output/standing_{output_name}")
     plt.show()
-
-    
 
 
 if __name__ == "__main__":
